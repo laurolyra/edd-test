@@ -1,0 +1,66 @@
+# Kafka topic catalogue for the event-driven shop.
+#
+# The scripts in this directory are the source of truth for topic names,
+# partition counts and retention. Keep this file in sync with the services.
+
+topics:
+  - name: orders.events
+    partitions: 6
+    retention_ms: 604800000
+    key: order_id
+    producers: [orders]
+    consumers: [stock, invoices, recommendations]
+    events:
+      - order.created
+      - order.cancelled
+      - order.completed
+
+  - name: stock.events
+    partitions: 6
+    retention_ms: 604800000
+    key: order_id
+    producers: [stock]
+    consumers: [orders, invoices]
+    events:
+      - stock.reserved
+      - stock.rejected
+      - stock.released
+      - stock.committed
+
+  - name: invoices.events
+    partitions: 6
+    retention_ms: 604800000
+    key: order_id
+    producers: [invoices]
+    consumers: [orders, fiscal]
+    events:
+      - invoice.issued
+      - invoice.voided
+
+  - name: fiscal.events
+    partitions: 6
+    retention_ms: 604800000
+    key: order_id
+    producers: [fiscal]
+    consumers: [orders]
+    events:
+      - fiscal.issued
+      - fiscal.cancelled
+
+  # One dead-letter topic per service. Messages that still fail after retries
+  # are parked here so the partition can move on.
+  - name: orders.dlq
+    partitions: 1
+    retention_ms: 2592000000
+  - name: stock.dlq
+    partitions: 1
+    retention_ms: 2592000000
+  - name: invoices.dlq
+    partitions: 1
+    retention_ms: 2592000000
+  - name: fiscal.dlq
+    partitions: 1
+    retention_ms: 2592000000
+  - name: recommendations.dlq
+    partitions: 1
+    retention_ms: 2592000000
